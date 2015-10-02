@@ -1,0 +1,16 @@
+{
+    "default" : {
+        "pool" : "/var/lib/network-backup/",
+        "filter" : false,
+        "git" : { "push" : false },
+        "user" : "backup"
+    },
+    "hosts" : [ "testhost.testdomain", "testhost.simpledomain" ],
+    "host-configuration" : {
+        "testhost.testdomain" : {
+            "pool" : "/tmp/network-backup/",
+            "git" : { "push" : true },
+            "filter" : true
+        }
+    }
+}

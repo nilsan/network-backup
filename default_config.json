@@ -2,15 +2,19 @@
     "default" : {
         "pool" : "/var/lib/network-backup/",
         "filter" : false,
-        "git" : { "push" : false },
-        "user" : "backup"
+        "git" : {
+            "push" : false,
+            "author" : "network-backup-user <network-backup@localhost>"
+        },
+        "user" : "backup",
+        "type" : "juniper",
+        "login" : "ssh"
     },
-    "hosts" : [ "testhost.testdomain", "testhost.simpledomain" ],
-    "host-configuration" : {
-        "testhost.testdomain" : {
-            "pool" : "/tmp/network-backup/",
-            "git" : { "push" : true },
-            "filter" : true
+    "device-types" : {
+        "juniper" : {
+            "commands" : [ "version", "config", "chassis environment", "chassis firmware", "chassis hardware detail", "chassis alarm", "interfaces brief", "system boot-messages", "system core-dumps", "system license", "vlans", "system commit" ] },
+        "cisco" : {
+            "commands" : [ "version", "config" ]
         }
     }
 }

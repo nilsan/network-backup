@@ -1,0 +1,22 @@
+{
+    "default" : {
+        "comment" : "Change default pool and default remote user",
+        "pool" : "/home/someuser/backup/network",
+        "user" : "someuser"
+    },
+    "hosts" : [ "sample-fw.test.com", "sample-fw.test.org" ],
+    "host-configuration" : {
+        "sample-fw.test.com" : {
+            "comment" : "Override filter and type",
+            "filter" : true,
+            "type" : "cisco"
+        },
+        "sample-fw.test.org" : {
+            "comment" : "Override type and git.author",
+            "type" : "juniper",
+            "git" : {
+                "author" : "some other name <nameless@test.org>"
+            }
+        }
+    }
+}

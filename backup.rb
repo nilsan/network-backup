@@ -7,7 +7,7 @@ require 'fileutils'
 require 'json'
 require 'pp'
 require 'net/ssh'
-require 'git'
+require 'open3'
 
 class Hash
    def deep_merge(hash)
@@ -91,6 +91,10 @@ module Network
         hostconfig(host)["git"]["author"]
       end
 
+      def commit_message(host)
+        hostconfig(host)["git"]["commit-message"]
+      end
+
     end
 
     def initialize
@@ -121,10 +125,40 @@ module Network
       result.each_pair do |k,v|
         File.write(k, v)
       end
-      git = Git.init
-      if ! (git.status.changed.empty? || git.status.untracked.empty?)
-        git.add(all: true)
-        git.commit_all("automatic backup", author: @configuration.author(host))
+
+      commit_to_git(@configuration.author(host), host, @configuration.commit_message(host))
+    end
+
+    # Commits any and all changes in cwd to git
+    def commit_to_git(author, host, commit_message)
+      message = ""
+      ret = Open3.popen2e("git", "init") do |i,o,t|
+        message = o.read
+        t.value.exitstatus
+      end
+      if ret != 0
+        puts "git init failed for #{host} with returnvalue #{ret} and message :"
+        puts message
+      else
+        ret = Open3.popen2e("git", "add", ".") do |i,o,t|
+          message = o.read
+          t.value.exitstatus
+        end
+        if ret != 0
+          puts "git add failed for #{host} with returnvalue #{ret} and message :"
+          puts message
+        else
+          ret = Open3.popen2e("git", "commit", "-m", commit_message, "--author", author) do |i,o,t|
+            message = o.read
+            t.value.exitstatus
+          end
+          if ret != 0
+            unless message.match(/nothing to commit/)
+              puts "git commit failed for #{host} with returnvalue #{ret} and message :"
+              puts message
+            end
+          end
+        end
       end
     end
 

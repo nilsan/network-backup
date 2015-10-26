@@ -4,7 +4,8 @@
         "filter" : false,
         "git" : {
             "push" : false,
-            "author" : "network-backup-user <network-backup@localhost>"
+            "author" : "network-backup-user <network-backup@localhost>",
+            "commit-message" : "automatic backup"
         },
         "user" : "backup",
         "type" : "juniper",

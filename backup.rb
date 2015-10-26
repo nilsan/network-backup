@@ -99,20 +99,57 @@ module Network
         hostconfig(host)["pool"] + "/" + host.split(".").reverse.join("/")
       end
 
+      def logdir
+        @config["default"]["pool"] + "/log"
+      end
+
+      def logname
+        "status"
+      end
+
     end
 
     def initialize
       @configuration = Configuration.new
     end
 
+    def log_start(message)
+      logdir = @configuration.logdir
+      FileUtils.mkpath(logdir) unless Dir.exists?(logdir)
+      abort("Logdir (#{logdir}) unavailable!") unless ( Dir.exists?(logdir) && File.writable?(logdir))
+      logfile = @configuration.logdir + "/" + @configuration.logname
+      file = File.open(logfile, "w")
+      abort("Logfile (#{logfile}) not writeable!") if file.nil?
+      file.puts(message)
+      file.close
+    end
+
+    def log_append(message)
+      logfile = @configuration.logdir + "/" + @configuration.logname
+      file = File.open(logfile, "a")
+      abort("Logfile (#{logfile}) not writeable!") if file.nil?
+      file.puts(message)
+      file.close
+    end
+
+    def log_commit
+      logdir = @configuration.logdir
+      abort("Unable to change directory to #{logdir}!") unless Dir.chdir(logdir)
+      commit_to_git(@configuration.config["default"]["git"]["author"], "log", "automatic backup complete")
+    end
+
     def perform_backups
+      log_start("Last backup started at : #{Time.now}")
+      log_append("\nHosts : #{@configuration.hosts.join(", ")}")
       @configuration.hosts.each do |host|
         perform_backup(host, @configuration.hostconfig(host))
       end
+      log_append("Completed at : #{Time.now}")
+      log_commit
     end
 
     def perform_backup(host, config)
-      puts "Backing up #{host}"
+      puts "#{Time.now} : Starting backup of #{host}"
       repo = @configuration.repo(host)
       FileUtils.mkpath(repo) unless Dir.exist?(repo)
       abort("Unable to change directory to #{repo}.") unless Dir.chdir(repo)
@@ -130,6 +167,7 @@ module Network
       end
 
       commit_to_git(@configuration.author(host), host, @configuration.commit_message(host))
+      puts "#{Time.now} : done."
     end
 
     # Commits any and all changes in cwd to git

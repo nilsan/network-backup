@@ -173,5 +173,3 @@ end
 agent = Network::Backup.new
 
 agent.perform_backups
-
-#agent.dump_configuration

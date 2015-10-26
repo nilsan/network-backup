@@ -95,6 +95,10 @@ module Network
         hostconfig(host)["git"]["commit-message"]
       end
 
+      def repo(host)
+        hostconfig(host)["pool"] + "/" + host.split(".").reverse.join("/")
+      end
+
     end
 
     def initialize
@@ -109,8 +113,7 @@ module Network
 
     def perform_backup(host, config)
       puts "Backing up #{host}"
-
-      repo = config["pool"] + "/" + host.split(".").reverse.join("/")
+      repo = @configuration.repo(host)
       FileUtils.mkpath(repo) unless Dir.exist?(repo)
       abort("Unable to change directory to #{repo}.") unless Dir.chdir(repo)
 

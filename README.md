@@ -1,5 +1,5 @@
 # network-backup
-Simple replacement for RANCID
+Simple replacement for [RANCID](http://www.shrubbery.net/rancid/)
 
 Since RANCID is a bit rancid, I've decided to make an alternative with git and ruby.
 

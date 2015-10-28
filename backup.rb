@@ -63,6 +63,9 @@ module Network
           @config["host-configuration"] = {}
         end
 
+        if @config["hosts"].nil? or @config["hosts"].empty?
+          raise "No hosts configured"
+        end
         # expand config["host-configuration][host] elements
         # This way each host will have a complete
         # configuration in @config["host-configuration"][hostname]

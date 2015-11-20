@@ -28,9 +28,9 @@ module Network
   class Backup
 
     attr_reader :configuration
-    
+
     class Configuration
-      
+
       attr_reader :config
       attr_reader :files
       attr_reader :commands
@@ -41,7 +41,7 @@ module Network
           abort("Missing key :#{key} in #{config_part}") if config_part[key].nil?
         end
       end
-      
+
       def initialize
         @files = ["default_config.json", "/etc/network-backup/config.json", "#{ENV["HOME"]}/.config/network-backup/config.json" ]
         @config = {}
@@ -144,10 +144,19 @@ module Network
     def perform_backups
       log_start("Last backup started at : #{Time.now}")
       log_append("\nHosts : #{@configuration.hosts.join(", ")}")
+      results = { ok: 0, fail: 0 }
       @configuration.hosts.each do |host|
-        perform_backup(host, @configuration.hostconfig(host))
+        begin
+          perform_backup(host, @configuration.hostconfig(host))
+          results[:ok] += 1
+        rescue Exception => e
+          results[:fail] += 1
+          puts e.to_s
+        end
       end
       log_append("Completed at : #{Time.now}")
+      log_append("#{results[:ok]} hosts OK, #{results[:fail]} hosts failed.")
+      puts("#{results[:ok]} hosts OK, #{results[:fail]} hosts failed.")
       log_commit
     end
 

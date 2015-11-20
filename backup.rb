@@ -64,7 +64,7 @@ module Network
         end
 
         if @config["hosts"].nil? or @config["hosts"].empty?
-          raise "No hosts configured"
+          raise "No hosts configured, tried #{@files.join(", ")}"
         end
         # expand config["host-configuration][host] elements
         # This way each host will have a complete
@@ -145,7 +145,11 @@ module Network
       log_start("Last backup started at : #{Time.now}")
       log_append("\nHosts : #{@configuration.hosts.join(", ")}")
       @configuration.hosts.each do |host|
-        perform_backup(host, @configuration.hostconfig(host))
+	if host.start_with?("-") 
+	  puts "Skipping disabled host : #{host}"
+	else
+          perform_backup(host, @configuration.hostconfig(host))
+	end
       end
       log_append("Completed at : #{Time.now}")
       log_commit
@@ -165,6 +169,7 @@ module Network
           result[cmd] = ssh.exec!("show #{cmd}")
         end
       end
+      # Todo: Rescue for Net::SSH::Proxy::ConnectError
       result.each_pair do |k,v|
         File.write(k, v)
       end

@@ -8,6 +8,7 @@ require 'json'
 require 'pp'
 require 'net/ssh'
 require 'open3'
+require 'time_diff'
 
 class Hash
    def deep_merge(hash)
@@ -151,8 +152,11 @@ module Network
 	    puts "Skipping disabled host : #{host}"
 	    results[:disabled] += 1
 	  else
-            perform_backup(host, @configuration.hostconfig(host))
-            results[:ok] += 1
+            if perform_backup(host, @configuration.hostconfig(host))
+              results[:ok] += 1
+	    else
+	      results[:fail] += 1
+	    end
 	  end
         rescue Exception => e
           results[:fail] += 1
@@ -166,7 +170,7 @@ module Network
     end
 
     def perform_backup(host, config)
-      puts "#{Time.now} : Starting backup of #{host}"
+      start = Time.now
       repo = @configuration.repo(host)
       FileUtils.mkpath(repo) unless Dir.exist?(repo)
       abort("Unable to change directory to #{repo}.") unless Dir.chdir(repo)
@@ -174,18 +178,32 @@ module Network
       config["user"] = ENV["USER"] if config["user"].empty?
 
       result = {}
-      Net::SSH.start(host, config["user"]) do |ssh|
-        @configuration.commands(host).each do |cmd|
-          result[cmd] = ssh.exec!("show #{cmd}")
+      ssh_status = false
+      error = ""
+      begin
+      	Net::SSH.start(host, config["user"]) do |ssh|
+          @configuration.commands(host).each do |cmd|
+            result[cmd] = ssh.exec!("show #{cmd}")
+          end
         end
-      end
-      # Todo: Rescue for Net::SSH::Proxy::ConnectError
-      result.each_pair do |k,v|
-        File.write(k, v)
+        result.each_pair do |k,v|
+          File.write(k, v)
+        end
+	ssh_status = true
+      rescue Net::SSH::Proxy::ConnectError => e
+	ssh_status = false
+	error = e.to_s
       end
 
-      commit_to_git(@configuration.author(host), host, @configuration.commit_message(host))
-      puts "#{Time.now} : done."
+      fin = Time.now
+      elapsed = Time.diff(fin, start)
+      if (ssh_status)
+        commit_to_git(@configuration.author(host), host, @configuration.commit_message(host))
+	puts "#{start} : Backup of #{host} complete in #{elapsed[:diff]}"
+      else
+	puts "#{start} : Backup of #{host} failed after #{elapsed[:diff]} because of #{error}"
+      end
+      return ssh_status
     end
 
     # Commits any and all changes in cwd to git

@@ -58,7 +58,7 @@ module Network
         # Make sure we have the minimum of expected configuration-keys
         sanity_check(@config, ["default"])
         sanity_check(@config["default"], ["pool", "filter", "git", "user", "type", "login"])
-        
+
         # And at least an empty hash for the per-host configuration
         if @config["host-configuration"].nil?
           @config["host-configuration"] = {}
@@ -201,7 +201,7 @@ module Network
         commit_to_git(@configuration.author(host), host, @configuration.commit_message(host))
 	puts "#{start} : Backup of #{host} complete in #{elapsed[:diff]}"
       else
-	puts "#{start} : Backup of #{host} failed after #{elapsed[:diff]} because of #{error}"
+	puts "#{start} : Backup of #{host} failed after #{elapsed[:diff]} \n\t\tbecause of #{error}"
       end
       return ssh_status
     end

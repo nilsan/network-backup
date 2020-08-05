@@ -1,3 +1,5 @@
 source 'https://rubygems.org/'
-gem 'net-ssh'
+gem 'net-ssh',      '>= 6.0'
+gem 'ed25519',      '>= 1.2'
+gem 'bcrypt_pbkdf', '>= 1.0'
 gem 'time_diff'

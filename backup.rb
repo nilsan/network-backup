@@ -148,7 +148,7 @@ module Network
       results = { ok: 0, fail: 0, disabled: 0 }
       @configuration.hosts.each do |host|
         begin
-	  if host.start_with?("-") 
+	  if host.start_with?("-")
 	    puts "Skipping disabled host : #{host}"
 	    results[:disabled] += 1
 	  else
@@ -183,7 +183,11 @@ module Network
       begin
       	Net::SSH.start(host, config["user"]) do |ssh|
           @configuration.commands(host).each do |cmd|
-            result[cmd] = ssh.exec!("show #{cmd}")
+            if @configuration.hostconfig(host)['type'] == 'ubiquiti'
+              result[cmd] = ssh.exec!("bash -ic \"show #{cmd}\"")
+            else
+              result[cmd] = ssh.exec!("show #{cmd}")
+            end
           end
         end
         result.each_pair do |k,v|
@@ -243,7 +247,7 @@ module Network
       pp @configuration.configuration_files_used
       pp @configuration.config
     end
-    
+
   end
 end
 
